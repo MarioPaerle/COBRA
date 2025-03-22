@@ -3,6 +3,7 @@
 ## First Tries
 - Data Embedding 
 - Sentiment Analysis
+- Variational Auto Encoders on MNIST
 
 ## Experiments
 - Conv Seq2Seq
