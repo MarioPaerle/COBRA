@@ -1,5 +1,7 @@
 # TODO
 
+- pip install numpy torch tensorflow pandas matplotlib torchvision
+
 ## First Tries
 - Data Embedding 
 - Sentiment Analysis
