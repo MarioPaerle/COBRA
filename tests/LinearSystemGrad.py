@@ -30,6 +30,7 @@ class LinearModelSolver:
 if __name__ == '__main__':
     A = np.array([[1, 2], [3, 4]]).astype(np.float64)
     b = np.array([[1], [2]]).astype(np.float64)
+
     LMS = LinearModelSolver(A, b)
     LMS.fit(10000)
 
