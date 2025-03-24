@@ -18,7 +18,7 @@ class LinearModelSolver:
     def backward(self):
         self.forward()
         dLdx = 2 * self.A.T @ (self.A @ self.x - self.b)
-        self.x -= dLdx * 0.01
+        self.x -= dLdx * 0.001
 
     def fit(self, epochs=10000):
         for epoch in range(epochs):
@@ -30,6 +30,9 @@ class LinearModelSolver:
 if __name__ == '__main__':
     A = np.array([[1, 2], [3, 4]]).astype(np.float64)
     b = np.array([[1], [2]]).astype(np.float64)
+
+    A = np.random.randn(100, 100)
+    b = np.random.randn(100, 1)
 
     LMS = LinearModelSolver(A, b)
     LMS.fit(10000)
