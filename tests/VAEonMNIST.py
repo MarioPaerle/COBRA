@@ -118,7 +118,7 @@ optimizer = Adam(model.parameters(), lr=0.01)
 model.train()
 # Sulla cpu questo ci mette un bel po' ma per usarlo dalla gpu serve linux, se si vuole si può provare con Colab
 # Inoltre il numero di epoche può essere aumentato di parecchio
-for epoch in range(3):
+for epoch in range(4):
     overall_loss = 0
     for batch_idx, (x, _) in enumerate(train_loader):
 
