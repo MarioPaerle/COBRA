@@ -6,12 +6,17 @@ import pyphen
 dic = pyphen.Pyphen(lang='en_EN')
 
 """Variational Auto Embedder Transformer for Hybrid sEmantic Representation"""
+"https://huggingface.co/datasets/glaiveai/reasoning-v1-20m/viewer/default/train"
 
 
-ds = load_dataset("roneneldan/TinyStories")
+
+ds = load_dataset("glaiveai/reasoning-v1-20m", split="train")
+
+
 
 ds_train = ds['train']
 print(len(ds_train))
+print(ds_train[0]['text'])
 input('start tokenizer >>>  ')
 
 tok = Tokenizer(undefined=0, splitter=' ')

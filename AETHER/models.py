@@ -10,7 +10,6 @@ def generate_square_subsequent_mask(sz: int) -> torch.Tensor:
 
 
 class TransformerDecoderLayer(nn.Module):
-
     def __init__(self, d_model: int, nhead: int, dim_feedforward: int, dropout: float = 0.1):
         super(TransformerDecoderLayer, self).__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
@@ -57,6 +56,28 @@ class TransformerDecoder(nn.Module):
         return x
 
 
+class Tremo(nn.Module):
+    def __init__(self,
+                 vocab_size,
+                 embedding_size,
+                 n_layers,
+                 dim_feedforward=10,):
+        super(Tremo, self).__init__()
+        self.mean_embedder = nn.Embedding(vocab_size, embedding_size)
+        self.var_embedder = nn.Embedding(vocab_size, embedding_size)
+        self.block = TransformerDecoder(
+            TransformerDecoderLayer(embedding_size, 1, dim_feedforward=dim_feedforward),
+            num_layers=n_layers)
+
+    def forward(self, x: torch.Tensor):
+        mean = self.mean_embedder(x)
+        var = self.var_embedder(x)
+        eps = torch.randn_like(var)
+        z = mean + var * eps
+        out = self.block(z)
+        return out, mean, var
+
+
 if __name__ == "__main__":
     d_model = 512
     nhead = 8
@@ -67,11 +88,15 @@ if __name__ == "__main__":
     decoder_layer = TransformerDecoderLayer(d_model, nhead, dim_feedforward, dropout)
     final_norm = nn.LayerNorm(d_model)
     transformer_decoder = TransformerDecoder(decoder_layer, num_layers, norm=final_norm)
+    tremolino = Tremo(10, 4, 5)
+
 
     x = torch.randn(10, 32, d_model)
+    xx = torch.randint(0, 10, size=(11, 32))
 
     tgt_mask = generate_square_subsequent_mask(x.size(0))
 
     output = transformer_decoder(x, tgt_mask=tgt_mask)
 
     print("Output shape:", output.shape)  # Expected shape: [10, 32, 512]
+    print(tremolino(xx))
