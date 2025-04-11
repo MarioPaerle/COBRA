@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 
+from matplotlib import pyplot as plt
+from torch import optim
+
 
 def generate_square_subsequent_mask(sz: int) -> torch.Tensor:
     mask = torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1)
@@ -61,21 +64,89 @@ class Tremo(nn.Module):
                  vocab_size,
                  embedding_size,
                  n_layers,
-                 dim_feedforward=10,):
+                 pos_encoder,
+                 dim_feedforward=10):
         super(Tremo, self).__init__()
         self.mean_embedder = nn.Embedding(vocab_size, embedding_size)
         self.var_embedder = nn.Embedding(vocab_size, embedding_size)
         self.block = TransformerDecoder(
             TransformerDecoderLayer(embedding_size, 1, dim_feedforward=dim_feedforward),
             num_layers=n_layers)
+        self.pos_encoder = pos_encoder
 
     def forward(self, x: torch.Tensor):
         mean = self.mean_embedder(x)
         var = self.var_embedder(x)
         eps = torch.randn_like(var)
         z = mean + var * eps
+        z = self.pos_encoder(z)
         out = self.block(z)
         return out, mean, var
+
+
+class AutoTrainer:
+    """This Class will make the train easier"""
+    def __init__(self, model, optimizer='Adam', lr=0.001, loss='NLLLoss'):
+        self.loss = loss
+        self.model = model
+        if isinstance(optimizer, str):
+            if optimizer == 'Adam':
+                self.optimizer = optim.Adam(model.parameters(), lr=lr)
+            elif optimizer == 'AdamW':
+                self.optimizer = optim.Adam(model.parameters(), lr=lr)
+        else:
+            self.optimizer = optimizer # This will assume model.parameter() is already been passed to\ the optimizer
+
+        if isinstance(loss, str):
+            if loss == 'NLLLoss':
+                self.loss = nn.NLLLoss()
+            elif loss == 'MSE':
+                self.loss = nn.MSELoss()
+            else:
+                raise ValueError('loss should be NLLLoss or MSE')
+        else:
+            self.loss = loss
+
+        self.epoch_losses = []
+        self.losses = []
+        self.dataloader = None
+        self.step = 0
+        self.batch_index = 0
+        self.epochs = 0
+
+    def step(self, batch):
+        """Step is meant to be called inside of the epoch loop"""
+        self.optimizer.zero_grad()
+
+        X = batch[:-1]
+        Y = batch[1:]
+        pred = self.model(X)
+
+        loss = self.loss(Y, pred)
+        self.losses.append(loss.item())
+
+        loss.backward()
+        self.optimizer.step()
+        self.step += 1
+        self.batch_index += 1
+
+    def epoch_step(self):
+        self.epoch_losses.append(sum(self.losses) / len(self.losses))
+        self.losses = []
+        self.batch_index = 0
+        self.epochs += 1
+
+    def add_loss(self, loss):
+        self.losses.append(loss)
+
+    def add_epoch_loss(self, loss):
+        self.epoch_losses.append(loss)
+
+    def plot_epoch_losses(self):
+        plt.plot(self.epoch_losses)
+        plt.show()
+
+
 
 
 if __name__ == "__main__":

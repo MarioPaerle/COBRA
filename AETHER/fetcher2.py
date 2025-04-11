@@ -10,9 +10,7 @@ criterion = nn.MSELoss()
 
 class TokenizedDataset(Dataset):
     def __init__(self, data):
-        """
-        data: lista di sequenze tokenizzate (es. [[1, 5, 6, 2], [4, 7, 8], ...])
-        """
+
         self.data = data
 
     def __len__(self):

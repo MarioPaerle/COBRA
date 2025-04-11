@@ -3,37 +3,25 @@ from functions import Tokenizer, tokenize_into_syllables
 import joblib
 import pyphen
 import itertools
+from transformers import AutoTokenizer
+
 dic = pyphen.Pyphen(lang='en_EN')
 
 """Variational Auto Embedder Transformer for Hybrid sEmantic Representation"""
 "https://huggingface.co/datasets/glaiveai/reasoning-v1-20m/viewer/default/train"
 
 
-
-ds_stream = load_dataset("glaiveai/reasoning-v1-20m", split="train", streaming=True)
-ds = list(itertools.islice(ds_stream, 10))
-print(ds)
-print(len(ds))
-ds_train = ds
-print(len(ds_train))
-print([d['response'] for d in ds])
-input('start tokenizer >>>  ')
-
-tok = Tokenizer(undefined=0, splitter=' ')
-
-print("Started Tokenizer")
-for i, story in enumerate(ds_train):
-    text = story['response']
-    for word in tokenize_into_syllables(text):
-        tok += word
-
-    if i % 1000 == 0:
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+ds_stream = load_dataset("open-thoughts/OpenThoughts2-1M", streaming=True, split="train")
+dataset = ds_stream.map(lambda x: tokenizer(" ".join([c['value'] for c in x['conversations']]), return_tensors="pt"))
+texts = []
+for i, piece in enumerate(ds_stream):
+    text = " ".join([c['value'] for c in piece['conversations']])[:512]
+    texts.append(tokenizer(text))
+    if i % 100 == 0:
         print(i)
-
-    if i == 10_000:
+    if i == 1000:
         break
 
-print(tok)
-
-input('save tok >>>   ')
-joblib.dump(tok, 'datas/tok1.pkl')
+input(' save >>>   ')
+joblib.dump(texts, 'datas/OT_ex1.pkl')
