@@ -11,7 +11,8 @@ dic = pyphen.Pyphen(lang='en_EN')
 ds = load_dataset("roneneldan/TinyStories")
 
 ds_train = ds['train']
-
+print(len(ds_train))
+input('start tokenizer >>>  ')
 
 tok = Tokenizer(undefined=0, splitter=' ')
 
